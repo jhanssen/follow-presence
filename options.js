@@ -4,6 +4,37 @@ const fs = require("fs");
 const path = require("path");
 const homedir = require("homedir");
 
+function split(data)
+{
+    const pre = data.split("\n");
+    // rejoin with lines that starts with a whitespace
+    const out = [];
+    let cur = "";
+    for (let i = 0; i < pre.length; ++i) {
+        let line = pre[i].replace(/\t/g, "  ");
+        if (!line.length)
+            continue;
+        if (!cur.length || /\s/.test(line[0])) {
+            let idx = 0;
+            while (/\s/.test(line[idx]))
+                ++idx;
+            cur += line.substr(idx ? idx - 1 : 0);
+            idx = cur.length - 1;
+            while (idx >= 0 && /\s/.test(cur[idx]))
+                --idx;
+            if (idx < cur.length - 1)
+                cur = cur.substr(0, idx + 1);
+        } else if (cur.length > 0) {
+            out.push(cur.trim());
+            cur = line.trim();
+        }
+    }
+    if (cur.length > 0) {
+        out.push(cur.trim());
+    }
+    return out;
+}
+
 class Options {
     constructor(argv, prefix) {
         this.argv = argv;
@@ -50,7 +81,7 @@ class Options {
             }
             if (typeof data === "string") {
                 // entries of key=value
-                const items = data.split("\n");
+                const items = split(data);
                 for (let i = 0; i < items.length; ++i) {
                     const item = items[i].trim();
                     if (!item.length)
