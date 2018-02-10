@@ -9,16 +9,23 @@ const options = require("./options")(argv, "presence");
 const distances = {};
 const state = {};
 
+function room(r) {
+    const prefix = "room_presence/";
+    if (typeof r === "string" && r.indexOf(prefix) === 0)
+        return r.substr(prefix.length);
+    return r;
+}
+
 function processDistances(client)
 {
     // find the current room for each uuid
     for (let uuid in distances) {
         const old = state[uuid];
         let cur;
-        for (let room in distances[uuid]) {
-            const canddist = distances[uuid][room];
+        for (let r in distances[uuid]) {
+            const canddist = distances[uuid][r];
             if (!cur || cur.distance > canddist) {
-                cur = { room: room, distance: canddist };
+                cur = { room: room(r), distance: canddist };
             }
         }
         if (cur) {
