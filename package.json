@@ -9,8 +9,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@jhanssen/options": "^1.0.0",
     "homedir": "^0.6.0",
-    "minimist": "^1.2.0",
     "mqtt": "^2.15.2"
   }
 }

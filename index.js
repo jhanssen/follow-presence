@@ -3,8 +3,7 @@
 "use strict";
 
 const mqtt = require("mqtt");
-const argv = require("minimist")(process.argv.slice(2));
-const options = require("./options")(argv, "presence");
+const options = require("@jhanssen/options")("presence");
 
 const distances = {};
 const state = {};
