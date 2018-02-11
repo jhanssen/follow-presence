@@ -1,4 +1,4 @@
-/*global require,process*/
+/*global require*/
 
 "use strict";
 
@@ -15,7 +15,7 @@ function room(r) {
     return r;
 }
 
-function processDistances(client)
+function processDistances(client, forcePublish)
 {
     // find the current room for each uuid
     for (let uuid in distances) {
@@ -27,7 +27,11 @@ function processDistances(client)
                 cur = { room: room(r), distance: canddist };
             }
         }
-        if (cur) {
+        if (forcePublish && cur) {
+            const msg = { uuid: uuid, cur: cur.room };
+            console.log("force publishing", msg);
+            client.publish("follow/presence", JSON.stringify(msg));
+        } else if (cur) {
             if (!old || cur.room !== old.room) {
                 // emit message
                 const oldroom = (old && old.room) || undefined;
@@ -70,6 +74,7 @@ function processDistances(client)
         for (let i = 0; i < rooms.length; ++i) {
             client.subscribe(`room_presence/${rooms[i]}`);
         }
+        client.subscribe("follow/presence/command");
     });
     client.once("close", () => {
         console.log("mqtt closed");
@@ -88,11 +93,23 @@ function processDistances(client)
         } catch (e) {
             return;
         }
-        if (!(data.uuid in distances))
-            distances[data.uuid] = {};
-        distances[data.uuid][topic] = data.distance;
+        switch (topic) {
+        case "follow/presence/command":
+            console.log("cmd", data);
+            switch (data.command) {
+            case "request":
+                processDistances(client, true);
+                break;
+            }
+            break;
+        default:
+            if (!(data.uuid in distances))
+                distances[data.uuid] = {};
+            distances[data.uuid][topic] = data.distance;
 
-        processDistances(client);
-        //console.log(distances);
+            processDistances(client);
+            //console.log(distances);
+            break;
+        }
     });
 })();
